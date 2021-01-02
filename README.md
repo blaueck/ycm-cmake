@@ -1,5 +1,5 @@
 # Description
-This is a simple cmake completer using Ycmd API.
+This is a simple cmake completer using Ycmd API. Support keyword completion and GetDoc.
 
 # Dependance
 - Cmake (Tested with 3.19.2) executable in PATH.
