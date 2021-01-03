@@ -1,4 +1,5 @@
 from ycmd.completers.completer import Completer
+from ycmd.completers.general.filename_completer import FilenameCompleter
 from ycmd import responses
 import ycmd.completers.completer_utils as cutils
 import subprocess
@@ -14,6 +15,7 @@ class CMakeCompleter(Completer):
         super().__init__(user_options)
         self._candidate = []
         self._raw_names = {}
+        self._fn_compl = FilenameCompleter(user_options)
         for type in ['command', 'variable', 'property', 'module']:
             ret = subprocess.run(['cmake', '--help-{}-list'.format(type)], capture_output=True)
             if ret.returncode == 0:
@@ -26,7 +28,11 @@ class CMakeCompleter(Completer):
     def ShouldUseNowInner(self, request_data):
         if len(self._candidate) == 0:
             return False
-        return self.QueryLengthAboveMinThreshold(request_data)
+        # dont complete when is filename
+        if self._fn_compl.ShouldUseNow(request_data):
+            return False
+        else:
+            return self.QueryLengthAboveMinThreshold(request_data)
 
     def ComputeCandidates(self, request_data):
         if not self.ShouldUseNow(request_data):
@@ -63,7 +69,7 @@ class CMakeCompleter(Completer):
                     capture_output=True)
             if ret.returncode == 0:
                 msg = ret.stdout.decode()
-                return responses.BuildDetailedInfoResponse(msg)
+                return responses.BuildDetailedInfoResponse(str(request_data))
 
         msg = "Can't find doc for {}".format(query)
         return responses.BuildDisplayMessageResponse(msg)
